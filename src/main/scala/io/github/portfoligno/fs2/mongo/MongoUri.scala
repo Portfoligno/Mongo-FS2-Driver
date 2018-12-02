@@ -3,7 +3,13 @@ package io.github.portfoligno.fs2.mongo
 import cats.ApplicativeError
 import com.mongodb.ConnectionString
 
-class MongoUri(override val underlying: ConnectionString) extends AnyVal with Wrapper[ConnectionString]
+class MongoUri(override val underlying: ConnectionString)
+  extends AnyVal with Wrapper[ConnectionString] {
+
+  def database: String = underlying.getDatabase
+
+  def collection: String = underlying.getCollection
+}
 
 object MongoUri {
   def apply[F[_]](uri: String)(implicit F: ApplicativeError[F, Throwable]): F[MongoUri] =

@@ -3,7 +3,10 @@ package io.github.portfoligno.fs2.mongo
 import cats.effect.{Resource, Sync}
 import com.mongodb.reactivestreams.client.{MongoClient, MongoClients}
 
-class Mongo(override val underlying: MongoClient) extends AnyVal with Wrapper[MongoClient]
+class Mongo(override val underlying: MongoClient) extends AnyVal with Wrapper[MongoClient] {
+  def apply(name: String): MongoDatabase =
+    new MongoDatabase(underlying.getDatabase(name))
+}
 
 object Mongo {
   def apply[F[_] : Sync](uri: String): Resource[F, Mongo] =
