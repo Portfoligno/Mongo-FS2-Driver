@@ -21,6 +21,8 @@ dependencies {
   scalaCompilerPlugin("org.scalamacros:paradise_2.12.7:2.1.1")
   api("org.scala-lang:scala-library:2.12.7")
   api("co.fs2:fs2-io_2.12:1.0.0")
+
+  implementation("org.mongodb:mongodb-driver-reactivestreams:1.10.0")
 }
 
 tasks.withType<ScalaCompile> {
