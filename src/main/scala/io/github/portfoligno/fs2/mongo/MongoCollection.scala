@@ -34,7 +34,7 @@ object MongoCollection {
   def apply[F[_] : Sync](uri: String): Resource[F, MongoCollection[F]] =
     Resource.liftF(MongoUri(uri)) >>= (MongoCollection(_))
 
-  def apply[F[_]](uri: MongoUri)(implicit F: Sync[F]): Resource[F, MongoCollection[F]] =
+  def apply[F[_] : Sync](uri: MongoUri): Resource[F, MongoCollection[F]] =
     uri.collection.fold(
       raiseResourceError[F, MongoCollection[F]](new IllegalArgumentException("Collection is not defined"))
     )(

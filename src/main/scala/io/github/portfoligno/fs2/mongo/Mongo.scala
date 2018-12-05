@@ -1,10 +1,13 @@
 package io.github.portfoligno.fs2.mongo
 
 import cats.effect.{Resource, Sync}
-import com.mongodb.reactivestreams.client.{MongoClient, MongoClients}
-import io.github.portfoligno.fs2.mongo.settings.MongoUri
+import com.mongodb.MongoCredential
+import com.mongodb.reactivestreams.client.MongoClient
+import io.github.portfoligno.fs2.mongo.settings.{MongoSettings, MongoUri}
 
-class Mongo[F[_]](override val underlying: MongoClient) extends AnyVal with Wrapper[MongoClient] {
+import scala.collection.immutable.Seq
+
+class Mongo[F[_]] private (override val underlying: MongoClient) extends AnyVal with Wrapper[MongoClient] {
   def apply(name: String): MongoDatabase[F] =
     new MongoDatabase(underlying.getDatabase(name))
 }
@@ -13,19 +16,20 @@ object Mongo {
   def apply[F[_] : Sync](uri: String): Resource[F, Mongo[F]] =
     Resource.liftF(MongoUri(uri)) >>= (Mongo(_))
 
-  def apply[F[_]](uri: MongoUri)(implicit F: Sync[F]): Resource[F, Mongo[F]] =
+  def apply[F[_] : Sync](uri: MongoUri): Resource[F, Mongo[F]] =
     if (uri.database.fold(false)(_ != "admin")) {
-      Resource.liftF(F.raiseError(new IllegalArgumentException(
-        "Database other than 'admin' is specified, please consider using `MongoDatabase.apply` instead")))
+      raiseResourceError(new IllegalArgumentException(
+        "Database other than 'admin' is specified. Please consider using `MongoDatabase.apply` instead"))
     } else {
-      Mongo.fromUri(uri)
+      toRawClient(uri).map(new Mongo(_))
     }
 
-  private[mongo]
-  def fromUri[F[_]](uri: MongoUri)(implicit F: Sync[F]): Resource[F, Mongo[F]] =
-    Resource.make(
-      F.delay(new Mongo[F](MongoClients.create(uri.toRawSettingsWithCredential)))
-    )(
-      client => F.delay(client.underlying.close())
-    )
+  def apply[F[_] : Sync](settings: MongoSettings, credentials: Seq[MongoCredential]): Resource[F, Mongo[F]] =
+    if (credentials.nonEmpty && credentials.forall(_.getSource != "admin")) {
+      raiseResourceError(new IllegalArgumentException(
+        "Credential of the 'admin' database is required to provide full access."
+          + " Please consider using `MongoDatabase.fromCredentials` instead"))
+    } else {
+      toRawClient(settings, credentials).map(new Mongo(_))
+    }
 }

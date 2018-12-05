@@ -1,24 +1,41 @@
 package io.github.portfoligno.fs2.mongo
 
 import cats.effect.{Resource, Sync}
+import com.mongodb.MongoCredential
 import com.mongodb.reactivestreams.client.{MongoDatabase => ReactiveDatabase}
-import io.github.portfoligno.fs2.mongo.settings.MongoUri
+import io.github.portfoligno.fs2.mongo.settings.{MongoSettings, MongoUri}
+
+import scala.collection.immutable.Seq
 
 class MongoDatabase[F[_]](override val underlying: ReactiveDatabase)
   extends AnyVal with Wrapper[ReactiveDatabase] {
 
   def apply(collectionName: String): MongoCollection[F] =
     new MongoCollection(underlying.getCollection(collectionName))
+
+  def name: String = underlying.getName
 }
 
 object MongoDatabase {
   def apply[F[_] : Sync](uri: String): Resource[F, MongoDatabase[F]] =
     Resource.liftF(MongoUri(uri)) >>= (MongoDatabase(_))
 
-  def apply[F[_]](uri: MongoUri)(implicit F: Sync[F]): Resource[F, MongoDatabase[F]] =
+  def apply[F[_] : Sync](uri: MongoUri): Resource[F, MongoDatabase[F]] =
     uri.database.fold(
       raiseResourceError[F, MongoDatabase[F]](new IllegalArgumentException("Database is not defined"))
     )(
-      database => Mongo.fromUri(uri).map(_(database))
+      database => toRawClient(uri).map(client => new MongoDatabase(client.getDatabase(database)))
     )
+
+
+  def fromCredentials[F[_] : Sync](
+    settings: MongoSettings, credentials: Seq[MongoCredential]
+  ): Resource[F, Seq[MongoDatabase[F]]] =
+    if (credentials.isEmpty) {
+      Resource.pure(Seq())
+    } else {
+      toRawClient(settings, credentials).map(client =>
+        credentials.map(c => new MongoDatabase[F](client.getDatabase(c.getSource)))
+      )
+    }
 }

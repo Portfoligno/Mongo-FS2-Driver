@@ -13,18 +13,6 @@ sealed trait MongoUri {
   def collection: Option[String]
 
   def settings: MongoSettings
-
-
-  private[mongo]
-  def toRawSettingsWithCredential: MongoClientSettings =
-    credential.fold(
-      settings.underlying
-    )(
-      MongoClientSettings
-        .builder(settings.underlying)
-        .credential(_)
-        .build()
-    )
 }
 
 object MongoUri {
