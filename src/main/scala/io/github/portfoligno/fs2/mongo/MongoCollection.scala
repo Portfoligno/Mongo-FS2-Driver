@@ -5,6 +5,7 @@ import cats.effect.{Resource, Sync}
 import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection}
 import fs2.Stream
 import io.circe.{Decoder, Encoder, ObjectEncoder}
+import io.github.portfoligno.fs2.mongo.settings.MongoUri
 import org.bson.Document
 import spire.math.Interval
 

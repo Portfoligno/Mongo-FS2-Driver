@@ -2,6 +2,7 @@ package io.github.portfoligno.fs2.mongo
 
 import cats.effect.{Resource, Sync}
 import com.mongodb.reactivestreams.client.{MongoDatabase => ReactiveDatabase}
+import io.github.portfoligno.fs2.mongo.settings.MongoUri
 
 class MongoDatabase[F[_]](override val underlying: ReactiveDatabase)
   extends AnyVal with Wrapper[ReactiveDatabase] {

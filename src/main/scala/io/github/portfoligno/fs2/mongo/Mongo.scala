@@ -2,6 +2,7 @@ package io.github.portfoligno.fs2.mongo
 
 import cats.effect.{Resource, Sync}
 import com.mongodb.reactivestreams.client.{MongoClient, MongoClients}
+import io.github.portfoligno.fs2.mongo.settings.MongoUri
 
 class Mongo[F[_]](override val underlying: MongoClient) extends AnyVal with Wrapper[MongoClient] {
   def apply(name: String): MongoDatabase[F] =
@@ -23,7 +24,7 @@ object Mongo {
   private[mongo]
   def fromUri[F[_]](uri: MongoUri)(implicit F: Sync[F]): Resource[F, Mongo[F]] =
     Resource.make(
-      F.delay(new Mongo[F](MongoClients.create(uri.underlying)))
+      F.delay(new Mongo[F](MongoClients.create(uri.toRawSettingsWithCredential)))
     )(
       client => F.delay(client.underlying.close())
     )
