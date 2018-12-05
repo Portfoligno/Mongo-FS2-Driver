@@ -14,11 +14,6 @@ trait BsonOrderInstances {
 
 
   /**
-    * @see [[org.bson.io.OutputBuffer#writeCharacters]]
-    */
-  implicit lazy val stringBsonOrder: BsonOrder[String] = fromOrder
-
-  /**
     * @see [[org.bson.BsonBinaryWriter#doWriteBoolean]]
     */
   implicit lazy val booleanBsonOrder: BsonOrder[Boolean] = fromOrder
