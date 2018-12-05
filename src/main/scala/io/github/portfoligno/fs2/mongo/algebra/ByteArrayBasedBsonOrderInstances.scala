@@ -4,15 +4,15 @@ import cats.Order
 import cats.instances.all._
 import cats.syntax.order._
 import org.bson.BsonBinarySubType
-import org.bson.types.Binary
+import org.bson.types.{Binary, ObjectId}
 import spire.math.UByte
 
 import scala.annotation.tailrec
 
 private[algebra]
-trait ByteArrayBsonOrderInstances extends BsonOrderInstances {
+trait ByteArrayBasedBsonOrderInstances extends BsonOrderInstances {
   private
-  implicit def sameLengthByteArrayOrder: Order[Array[Byte]] = Order.from { (left, right) =>
+  implicit lazy val sameLengthByteArrayOrder: Order[Array[Byte]] = Order.from { (left, right) =>
     val n = left.length // The same as right.length
 
     @tailrec
@@ -30,6 +30,7 @@ trait ByteArrayBsonOrderInstances extends BsonOrderInstances {
       }
     loop(0)
   }
+
 
   /**
     * @see [[org.bson.BsonBinaryWriter#doWriteBinaryData]]
@@ -60,4 +61,9 @@ trait ByteArrayBsonOrderInstances extends BsonOrderInstances {
       )
     )
   )
+
+  /**
+    * @see [[org.bson.BsonBinaryWriter#doWriteObjectId]]
+    */
+  implicit lazy val objectIdBsonOrder: BsonOrder[ObjectId] = fromOrder(Order.by(_.toByteArray))
 }
