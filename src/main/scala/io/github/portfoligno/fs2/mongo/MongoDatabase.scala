@@ -26,6 +26,11 @@ object MongoDatabase {
       database => toRawClient(uri).map(client => new MongoDatabase(client.getDatabase(database)))
     )
 
+  def apply[F[_] : Sync](settings: MongoSettings, credential: MongoCredential): Resource[F, MongoDatabase[F]] =
+    toRawClient(settings, Seq(credential)).map(client =>
+      new MongoDatabase(client.getDatabase(credential.underlying.getSource))
+    )
+
 
   def fromCredentials[F[_] : Sync](
     settings: MongoSettings, credentials: Seq[MongoCredential]
