@@ -13,6 +13,15 @@ object Mongo {
     Resource.liftF(MongoUri(uri)) >>= (Mongo(_))
 
   def apply[F[_]](uri: MongoUri)(implicit F: Sync[F]): Resource[F, Mongo[F]] =
+    if (uri.database.fold(false)(_ != "admin")) {
+      Resource.liftF(F.raiseError(new IllegalArgumentException(
+        "Database other than 'admin' is specified, please consider using `MongoDatabase.apply` instead")))
+    } else {
+      Mongo.fromUri(uri)
+    }
+
+  private[mongo]
+  def fromUri[F[_]](uri: MongoUri)(implicit F: Sync[F]): Resource[F, Mongo[F]] =
     Resource.make(
       F.delay(new Mongo[F](MongoClients.create(uri.underlying)))
     )(

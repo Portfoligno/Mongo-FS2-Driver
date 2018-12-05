@@ -3,12 +3,12 @@ package io.github.portfoligno.fs2.mongo
 import cats.ApplicativeError
 import com.mongodb.ConnectionString
 
-class MongoUri(override val underlying: ConnectionString)
+case class MongoUri(override val underlying: ConnectionString)
   extends AnyVal with Wrapper[ConnectionString] {
 
-  def database: String = underlying.getDatabase
+  def database: Option[String] = Option(underlying.getDatabase)
 
-  def collection: String = underlying.getCollection
+  def collection: Option[String] = Option(underlying.getCollection)
 }
 
 object MongoUri {
