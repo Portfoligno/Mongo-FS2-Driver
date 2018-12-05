@@ -6,7 +6,7 @@ import io.github.portfoligno.fs2.mongo.settings.{MongoCredential, MongoSettings,
 
 import scala.collection.immutable.Seq
 
-class Mongo[F[_]] private (override val underlying: MongoClient) extends AnyVal with Wrapper[MongoClient] {
+class Mongo[F[_]] private (override val underlying: MongoClient) extends AnyVal with Wrapped[MongoClient] {
   def apply(name: String): MongoDatabase[F] =
     new MongoDatabase(underlying.getDatabase(name))
 }

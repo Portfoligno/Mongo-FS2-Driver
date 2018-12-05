@@ -1,6 +1,6 @@
 package io.github.portfoligno.fs2.mongo
 
-trait Wrapper[A] extends Any {
+trait Wrapped[A] extends Any {
   def underlying: A
 
   override

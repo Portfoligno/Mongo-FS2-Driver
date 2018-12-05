@@ -12,7 +12,7 @@ import spire.math.Interval
 import scala.collection.immutable.Seq
 
 class MongoCollection[F[_]](override val underlying: ReactiveCollection[Document])
-  extends AnyVal with Wrapper[ReactiveCollection[Document]] {
+  extends AnyVal with Wrapped[ReactiveCollection[Document]] {
 
   def first[A : Decoder](path: Seq[String]): F[Option[A]] = ???
 

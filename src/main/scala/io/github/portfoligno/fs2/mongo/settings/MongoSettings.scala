@@ -1,9 +1,9 @@
 package io.github.portfoligno.fs2.mongo.settings
 
 import com.mongodb.MongoClientSettings
-import io.github.portfoligno.fs2.mongo.Wrapper
+import io.github.portfoligno.fs2.mongo.Wrapped
 
-sealed trait MongoSettings extends Any with Wrapper[MongoClientSettings]
+sealed trait MongoSettings extends Any with Wrapped[MongoClientSettings]
 
 object MongoSettings {
   import io.github.portfoligno.fs2.mongo.{settings => outer}
