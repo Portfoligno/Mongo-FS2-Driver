@@ -1,9 +1,8 @@
 package io.github.portfoligno.fs2.mongo
 
 import cats.effect.{Resource, Sync}
-import com.mongodb.MongoCredential
 import com.mongodb.reactivestreams.client.{MongoDatabase => ReactiveDatabase}
-import io.github.portfoligno.fs2.mongo.settings.{MongoSettings, MongoUri}
+import io.github.portfoligno.fs2.mongo.settings.{MongoCredential, MongoSettings, MongoUri}
 
 import scala.collection.immutable.Seq
 
@@ -35,7 +34,7 @@ object MongoDatabase {
       Resource.pure(Seq())
     } else {
       toRawClient(settings, credentials).map(client =>
-        credentials.map(c => new MongoDatabase[F](client.getDatabase(c.getSource)))
+        credentials.map(c => new MongoDatabase[F](client.getDatabase(c.underlying.getSource)))
       )
     }
 }

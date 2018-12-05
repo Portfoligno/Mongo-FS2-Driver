@@ -2,10 +2,10 @@ package io.github.portfoligno.fs2
 
 import cats.effect.{Resource, Sync}
 import cats.{Applicative, ApplicativeError}
+import com.mongodb.MongoClientSettings
 import com.mongodb.async.client.{MongoClientSettings => LegacyClientSettings}
 import com.mongodb.reactivestreams.client.{MongoClient, MongoClients}
-import com.mongodb.{MongoClientSettings, MongoCredential}
-import io.github.portfoligno.fs2.mongo.settings.{MongoSettings, MongoUri}
+import io.github.portfoligno.fs2.mongo.settings.{MongoCredential, MongoSettings, MongoUri}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
@@ -22,13 +22,13 @@ package object mongo {
   def toRawSettings(settings: MongoSettings, credential: MongoCredential): MongoClientSettings =
     MongoClientSettings
       .builder(settings.underlying)
-      .credential(credential)
+      .credential(credential.underlying)
       .build()
 
   private
   def toRawLegacySettings(settings: MongoSettings, credentials: Seq[MongoCredential]): LegacyClientSettings =
     legacySettingsBuilderFactory(settings.underlying)
-      .credentialList(credentials.asJava)
+      .credentialList(credentials.map(_.underlying).asJava)
       .build()
 
 

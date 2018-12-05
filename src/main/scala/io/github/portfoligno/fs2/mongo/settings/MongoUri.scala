@@ -3,7 +3,7 @@ package io.github.portfoligno.fs2.mongo.settings
 import cats.ApplicativeError
 import cats.syntax.functor._
 import com.mongodb.connection.netty.NettyStreamFactoryFactory
-import com.mongodb.{ConnectionString, MongoClientSettings, MongoCredential}
+import com.mongodb.{ConnectionString, MongoClientSettings, MongoCredential => RawCredential}
 
 sealed trait MongoUri {
   def credential: Option[MongoCredential]
@@ -34,11 +34,11 @@ object MongoUri {
 
   private
   class ParsedUri(uri: String) extends ConnectionString(uri) {
-    def credential: Option[MongoCredential] = Option(super.getCredential)
+    def credential: Option[MongoCredential] = Option(super.getCredential).map(MongoCredential)
 
     // Workaround that MongoClientSettings.Builder does not allow un-setting the credential later
     override
-    def getCredential: MongoCredential = null
+    def getCredential: RawCredential = null
   }
 
   def apply[F[_]](uri: String)(implicit F: ApplicativeError[F, Throwable]): F[outer.MongoUri] =

@@ -1,9 +1,8 @@
 package io.github.portfoligno.fs2.mongo
 
 import cats.effect.{Resource, Sync}
-import com.mongodb.MongoCredential
 import com.mongodb.reactivestreams.client.MongoClient
-import io.github.portfoligno.fs2.mongo.settings.{MongoSettings, MongoUri}
+import io.github.portfoligno.fs2.mongo.settings.{MongoCredential, MongoSettings, MongoUri}
 
 import scala.collection.immutable.Seq
 
@@ -25,7 +24,7 @@ object Mongo {
     }
 
   def apply[F[_] : Sync](settings: MongoSettings, credentials: Seq[MongoCredential]): Resource[F, Mongo[F]] =
-    if (credentials.nonEmpty && credentials.forall(_.getSource != "admin")) {
+    if (credentials.nonEmpty && credentials.forall(_.underlying.getSource != "admin")) {
       raiseResourceError(new IllegalArgumentException(
         "Credential of the 'admin' database is required to provide full access."
           + " Please consider using `MongoDatabase.fromCredentials` instead"))
