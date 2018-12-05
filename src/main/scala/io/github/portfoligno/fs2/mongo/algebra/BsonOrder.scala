@@ -6,4 +6,4 @@ trait BsonOrder[A] extends Any {
   def toOrder: Order[A]
 }
 
-object BsonOrder extends BsonOrderInstances
+object BsonOrder extends ByteArrayBsonOrderInstances

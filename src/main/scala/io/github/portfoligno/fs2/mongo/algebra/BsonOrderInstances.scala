@@ -2,7 +2,6 @@ package io.github.portfoligno.fs2.mongo.algebra
 
 import cats.Order
 import cats.instances.all._
-import org.bson.types.Binary
 
 private[algebra]
 trait BsonOrderInstances {
@@ -10,8 +9,5 @@ trait BsonOrderInstances {
 
   def fromComparable[A <: Comparable[A]]: BsonOrder[A] = FromOrder(Order.fromComparable)
 
-
-  implicit lazy val binaryOrder: BsonOrder[Binary] = ???
-
-  implicit lazy val booleanOrder: BsonOrder[Boolean] = fromOrder
+  implicit lazy val booleanBsonOrder: BsonOrder[Boolean] = fromOrder
 }
