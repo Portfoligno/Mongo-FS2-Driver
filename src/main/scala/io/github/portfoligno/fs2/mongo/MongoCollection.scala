@@ -1,36 +1,24 @@
 package io.github.portfoligno.fs2.mongo
 
-import cats.Order
-import cats.data.OptionT
 import cats.effect.{Resource, Sync}
 import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection}
 import fs2.Stream
-import io.circe.{Decoder, Encoder, ObjectEncoder}
-import io.github.portfoligno.fs2.mongo.algebra.interval.IntervalT
 import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
+import io.github.portfoligno.fs2.mongo.algebra.interval.IntervalT
 import io.github.portfoligno.fs2.mongo.settings.MongoUri
 import org.bson.Document
+import org.bson.types.ObjectId
 
 import scala.collection.immutable.Seq
 
 class MongoCollection[F[_]](override val underlying: ReactiveCollection[Document])
-  extends AnyVal with Wrapped[ReactiveCollection[Document]] {
+  extends AnyVal with MongoCollectionOps[F] {
 
-  def first[A : Decoder](path: String): OptionT[F, A] = ???
+  def ascendingById(interval: IntervalT[F, BsonOrder, ObjectId])(fields: Seq[String]): Stream[F, Document] = ???
 
-  def last[A : Decoder](path: String): OptionT[F, A] = ???
+  def descendingById(interval: IntervalT[F, BsonOrder, ObjectId])(fields: Seq[String]): Stream[F, Document] = ???
 
-  def interval[A : Order : Decoder](path: String): IntervalT[F, BsonOrder, A] = ???
-
-
-  def findSorted[A : Order : Encoder, B : Decoder](
-    path: String,
-    interval: IntervalT[F, BsonOrder, A]
-  )(
-    fields: Seq[String]
-  ): Stream[F, B] = ???
-
-  def insert[A : ObjectEncoder](documents: Stream[F, A]): F[Unit] = ???
+  def insert(documents: Stream[F, Document]): F[Unit] = ???
 }
 
 object MongoCollection {

@@ -22,7 +22,6 @@ dependencies {
   api("org.scala-lang:scala-library:2.12.7")
   implementation("org.typelevel:spire-extras_2.12:0.16.0")
   api("co.fs2:fs2-io_2.12:1.0.0")
-  api("io.circe:circe-core_2.12:0.10.1")
 
   implementation("org.mongodb:mongodb-driver-reactivestreams:1.10.0")
 }
