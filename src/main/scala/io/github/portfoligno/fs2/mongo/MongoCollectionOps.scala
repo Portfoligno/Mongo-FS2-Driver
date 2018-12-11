@@ -44,7 +44,7 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
   def findById(
     sorting: String => Bson, interval: IntervalT[F, BsonOrder, ObjectId]
   )(
-    fields: Seq[String]
+    fields: Seq[String], batchSize: Int
   ): Stream[F, Document] =
     Stream.eval(interval.value) >>= {
       case Valued(left, right) =>
@@ -56,15 +56,25 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
           .find(Filters.and(criteria.flatten: _*))
           .projection(Projections.include(fields: _*))
           .sort(sorting("_id"))
+          .batchSize(batchSize)
           .toStream
+          .chunkN(batchSize)
 
       case _ =>
         Stream.empty
     }
 
-  def ascendingById(interval: IntervalT[F, BsonOrder, ObjectId])(fields: Seq[String]): Stream[F, Document] =
-    findById(Sorts.ascending(_), interval)(fields)
+  def ascendingById(
+    interval: IntervalT[F, BsonOrder, ObjectId]
+  )(
+    fields: Seq[String], batchSize: Int
+  ): Stream[F, Document] =
+    findById(Sorts.ascending(_), interval)(fields, batchSize)
 
-  def descendingById(interval: IntervalT[F, BsonOrder, ObjectId])(fields: Seq[String]): Stream[F, Document] =
-    findById(Sorts.descending(_), interval)(fields)
+  def descendingById(
+    interval: IntervalT[F, BsonOrder, ObjectId]
+  )(
+    fields: Seq[String], batchSize: Int
+  ): Stream[F, Document] =
+    findById(Sorts.descending(_), interval)(fields, batchSize)
 }
