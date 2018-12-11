@@ -6,6 +6,7 @@ import cats.{Applicative, ApplicativeError, Monad, Semigroupal}
 import com.mongodb.MongoClientSettings
 import com.mongodb.async.client.{MongoClientSettings => LegacyClientSettings}
 import com.mongodb.reactivestreams.client.{MongoClient, MongoClients}
+import fs2.Stream
 import io.github.portfoligno.fs2.mongo.settings.{MongoCredential, MongoSettings, MongoUri}
 
 import scala.collection.JavaConverters._
@@ -76,5 +77,11 @@ package object mongo {
   implicit class OptionTTuple2Ops[F[_], A0, A1](private val tuple: (OptionT[F, A0], OptionT[F, A1])) extends AnyVal {
     def mapN[Z](f: (A0, A1) => Z)(implicit F: Monad[F]): OptionT[F, Z] =
       Semigroupal.map2(tuple._1, tuple._2)(f)
+  }
+
+  private[mongo]
+  implicit class StreamOps[F[_], A](private val stream: Stream[F, A]) extends AnyVal {
+    def >>=[B](f: A => Stream[F, B]): Stream[F, B] =
+      stream.flatMap(f)
   }
 }
