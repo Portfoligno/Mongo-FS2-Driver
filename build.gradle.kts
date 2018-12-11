@@ -21,7 +21,9 @@ dependencies {
   scalaCompilerPlugin("org.scalamacros:paradise_2.12.7:2.1.1")
   api("org.scala-lang:scala-library:2.12.7")
   implementation("org.typelevel:spire-extras_2.12:0.16.0")
-  api("co.fs2:fs2-io_2.12:1.0.0")
+
+  implementation("co.fs2:fs2-reactive-streams_2.12:1.0.2") { setTransitive(false) }
+  api("co.fs2:fs2-core_2.12:1.0.2")
 
   implementation("org.mongodb:mongodb-driver-reactivestreams:1.10.0")
 }
