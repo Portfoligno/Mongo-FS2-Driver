@@ -8,7 +8,7 @@ import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection
 import fs2.Stream
 import fs2.interop.reactivestreams._
 import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
-import io.github.portfoligno.fs2.mongo.algebra.interval._
+import io.github.portfoligno.fs2.mongo.algebra.segment.{Bounded, Segment, SegmentT}
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
@@ -36,20 +36,24 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
   def lastId(implicit F: Async[F]): OptionT[F, ObjectId] =
     boundId(Sorts.descending(_))
 
-  def idInterval(implicit F: Async[F]): IntervalT[F, BsonOrder, ObjectId] =
-    IntervalT((firstId, lastId)
-      .mapN(Interval.closed[BsonOrder](_, _))
-      .fold(Interval.empty[BsonOrder, ObjectId])(identity))
+  def idInterval(implicit F: Async[F]): SegmentT[F, BsonOrder, ObjectId] =
+    SegmentT((firstId, lastId)
+      .mapN(Segment.closed[BsonOrder](_, _))
+      .fold(Segment.empty[BsonOrder, ObjectId])(identity))
 
 
-  private
   def findById(
-    sorting: String => Bson, interval: IntervalT[F, BsonOrder, ObjectId]
+    segment: SegmentT[F, BsonOrder, ObjectId]
   )(
     fields: Seq[String], batchSize: Int
+  )(
+    implicit A: BsonOrder[ObjectId]
   ): Stream[F, Document] =
-    Stream.eval(interval.value) >>= {
-      case Valued(left, right) =>
+    Stream.eval(segment.value) >>= {
+      case Bounded(_, _, 0) =>
+        Stream.empty
+
+      case Bounded(left, right, direction) =>
         val criteria = Seq(
           left.map(b => (if (b.isClosed) Filters.gte _ else Filters.gt _)("_id", b.value)),
           right.map(b => (if (b.isClosed) Filters.lte _ else Filters.lt _)("_id", b.value))
@@ -57,28 +61,11 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
         underlying
           .find(Filters.and(criteria.flatten: _*))
           .projection(Projections.include(fields: _*))
-          .sort(sorting("_id"))
+          .sort((if (direction < 0) Sorts.descending(_) else Sorts.ascending(_))("_id"))
           .batchSize(batchSize)
           .toStream
           .chunkN(batchSize)
-
-      case _ =>
-        Stream.empty
     }
-
-  def ascendingById(
-    interval: IntervalT[F, BsonOrder, ObjectId]
-  )(
-    fields: Seq[String], batchSize: Int
-  ): Stream[F, Document] =
-    findById(Sorts.ascending(_), interval)(fields, batchSize)
-
-  def descendingById(
-    interval: IntervalT[F, BsonOrder, ObjectId]
-  )(
-    fields: Seq[String], batchSize: Int
-  ): Stream[F, Document] =
-    findById(Sorts.descending(_), interval)(fields, batchSize)
 
 
   def insert(documents: Stream[F, Document])(implicit F: Sync[F]): Stream[F, BulkWriteResult] =

@@ -1,4 +1,4 @@
-package io.github.portfoligno.fs2.mongo.algebra.interval
+package io.github.portfoligno.fs2.mongo.algebra.segment
 
 sealed case class Bound[A](value: A, isClosed: Boolean)
 
