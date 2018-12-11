@@ -1,8 +1,9 @@
 package io.github.portfoligno.fs2.mongo
 
 import cats.data.OptionT
-import cats.effect.Async
-import com.mongodb.client.model.{Filters, Projections, Sorts}
+import cats.effect.{Async, Sync}
+import com.mongodb.bulk.BulkWriteResult
+import com.mongodb.client.model.{Filters, InsertOneModel, Projections, Sorts}
 import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection}
 import fs2.Stream
 import fs2.interop.reactivestreams._
@@ -12,6 +13,7 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 
+import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
 
 private[mongo]
@@ -77,4 +79,11 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
     fields: Seq[String], batchSize: Int
   ): Stream[F, Document] =
     findById(Sorts.descending(_), interval)(fields, batchSize)
+
+
+  def insert(documents: Stream[F, Document])(implicit F: Sync[F]): Stream[F, BulkWriteResult] =
+    documents
+      .map(new InsertOneModel(_))
+      .chunks
+      .flatMap(c => underlying.bulkWrite(c.toVector.asJava).toStream)
 }
