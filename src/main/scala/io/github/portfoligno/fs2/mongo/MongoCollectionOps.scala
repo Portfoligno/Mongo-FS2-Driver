@@ -61,7 +61,7 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
         underlying
           .find(Filters.and(criteria.flatten: _*))
           .projection(Projections.include(fields: _*))
-          .sort((if (direction < 0) Sorts.descending(_) else Sorts.ascending(_))("_id"))
+          .sort((if (direction < 0) Sorts.descending(_: String) else Sorts.ascending(_: String))("_id"))
           .batchSize(batchSize)
           .toStream
           .chunkN(batchSize)

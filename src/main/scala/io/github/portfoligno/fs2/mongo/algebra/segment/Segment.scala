@@ -3,7 +3,14 @@ package io.github.portfoligno.fs2.mongo.algebra.segment
 import cats.{Order, ~>}
 import fs2.Pure
 
-sealed trait Segment[O[_], A] extends Any
+sealed trait Segment[O[_], A] extends Any {
+  def reverse: Segment[O, A] = Reversed(this)
+}
+
+final case class Reversed[O[_], A](value: Segment[O, A]) extends AnyVal with Segment[O, A] {
+  override
+  def reverse: Segment[O, A] = value
+}
 
 case object Nil extends Segment[Pure, Nothing]
 

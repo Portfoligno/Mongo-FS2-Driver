@@ -12,6 +12,9 @@ object Bounded {
     implicit O: O[A], ev: O ~> Order
   ): Option[(Option[Bound[A]], Option[Bound[A]], Int)] =
     segment match {
+      case Reversed(Bounded(left: Option[Bound[A]], right: Option[Bound[A]], direction)) =>
+        Some((left, right, -direction))
+
       case Valued(left @ Some(Bound(l, lc)), right @ Some(Bound(r, rc))) =>
         ev(O).compare(l, r) match {
           case 0 if lc && rc =>
