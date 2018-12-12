@@ -80,7 +80,7 @@ package object mongo {
   }
 
   private[mongo]
-  implicit class StreamOps[F[_], A](private val stream: Stream[F, A]) extends AnyVal {
+  implicit class StreamOps[F[_], A](private val stream: Stream[F, A]) {
     def >>=[B](f: A => Stream[F, B]): Stream[F, B] =
       stream.flatMap(f)
   }

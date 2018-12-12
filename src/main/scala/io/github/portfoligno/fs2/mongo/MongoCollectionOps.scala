@@ -1,7 +1,7 @@
 package io.github.portfoligno.fs2.mongo
 
 import cats.data.OptionT
-import cats.effect.{Async, Sync}
+import cats.effect.{Async, ConcurrentEffect}
 import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.model.{Filters, InsertOneModel, Projections, Sorts}
 import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection}
@@ -47,7 +47,7 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
   )(
     fields: Seq[String], batchSize: Int
   )(
-    implicit A: BsonOrder[ObjectId]
+    implicit F: ConcurrentEffect[F], A: BsonOrder[ObjectId]
   ): Stream[F, Document] =
     Stream.eval(segment.value) >>= {
       case Bounded(_, _, 0) =>
@@ -65,12 +65,13 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
           .batchSize(batchSize)
           .toStream
           .chunkN(batchSize)
+          .flatMap(Stream.chunk)
     }
 
 
-  def insert(documents: Stream[F, Document])(implicit F: Sync[F]): Stream[F, BulkWriteResult] =
+  def insert(documents: Stream[F, Document])(implicit F: ConcurrentEffect[F]): Stream[F, BulkWriteResult] =
     documents
       .map(new InsertOneModel(_))
       .chunks
-      .flatMap(c => underlying.bulkWrite(c.toVector.asJava).toStream)
+      .flatMap(c => underlying.bulkWrite(c.toVector.asJava).toStream[F])
 }
