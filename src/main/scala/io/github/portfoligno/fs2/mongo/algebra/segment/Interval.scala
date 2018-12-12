@@ -5,14 +5,14 @@ import cats.{Order, ~>}
 /**
   * An extractor for the ordered bounds and direction based on the `O` context
   */
-object Bounded {
+object Interval {
   def unapply[O[_], A](
     segment: Segment[O, A]
   )(
     implicit O: O[A], ev: O ~> Order
   ): Option[(Option[Bound[A]], Option[Bound[A]], Int)] =
     segment match {
-      case Reversed(Bounded(left: Option[Bound[A]], right: Option[Bound[A]], direction)) =>
+      case Reversed(Interval(left: Option[Bound[A]], right: Option[Bound[A]], direction)) =>
         Some((left, right, -direction))
 
       case Valued(left @ Some(Bound(l, lc)), right @ Some(Bound(r, rc))) =>

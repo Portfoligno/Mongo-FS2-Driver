@@ -8,7 +8,7 @@ import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection
 import fs2.Stream
 import fs2.interop.reactivestreams._
 import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
-import io.github.portfoligno.fs2.mongo.algebra.segment.{Bounded, Segment, SegmentT}
+import io.github.portfoligno.fs2.mongo.algebra.segment.{Interval, Segment, SegmentT}
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
@@ -50,10 +50,10 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
     implicit F: ConcurrentEffect[F], A: BsonOrder[ObjectId]
   ): Stream[F, Document] =
     Stream.eval(segment.value) >>= {
-      case Bounded(_, _, 0) =>
+      case Interval(_, _, 0) =>
         Stream.empty
 
-      case Bounded(left, right, direction) =>
+      case Interval(left, right, direction) =>
         val criteria = Seq(
           left.map(b => (if (b.isClosed) Filters.gte _ else Filters.gt _)("_id", b.value)),
           right.map(b => (if (b.isClosed) Filters.lte _ else Filters.lt _)("_id", b.value))
