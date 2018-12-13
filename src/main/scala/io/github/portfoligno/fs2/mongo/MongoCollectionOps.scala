@@ -8,6 +8,7 @@ import fs2.interop.reactivestreams._
 import fs2.{Chunk, Stream}
 import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
 import io.github.portfoligno.fs2.mongo.algebra.segment.{Interval, Segment}
+import io.github.portfoligno.fs2.mongo.result.WriteResult
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
@@ -58,8 +59,9 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
     }
 
 
-  def insert(chunk: Chunk[Document])(implicit F: ConcurrentEffect[F]): Stream[F, Any] =
+  def insert(chunk: Chunk[Document])(implicit F: ConcurrentEffect[F]): Stream[F, WriteResult] =
     underlying
       .bulkWrite(chunk.map(new InsertOneModel(_)).toVector.asJava)
-      .toStream[F]
+      .toStream
+      .map(WriteResult)
 }
