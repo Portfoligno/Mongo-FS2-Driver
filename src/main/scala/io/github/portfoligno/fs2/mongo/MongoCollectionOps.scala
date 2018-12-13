@@ -7,7 +7,7 @@ import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection
 import fs2.interop.reactivestreams._
 import fs2.{Chunk, Stream}
 import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
-import io.github.portfoligno.fs2.mongo.algebra.segment.{Interval, Segment}
+import io.github.portfoligno.fs2.mongo.algebra.interval.{Projection, Interval}
 import io.github.portfoligno.fs2.mongo.result.WriteResult
 import org.bson.Document
 import org.bson.conversions.Bson
@@ -37,14 +37,14 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
     boundId(Sorts.descending(_))
 
 
-  def findById(segment: Segment[BsonOrder, ObjectId])(batchSize: Int)(
+  def findById(interval: Interval[BsonOrder, ObjectId])(batchSize: Int)(
     implicit F: ConcurrentEffect[F], A: BsonOrder[ObjectId]
   ): Stream[F, Document] =
-    segment match {
-      case Interval(_, _, 0) =>
+    interval match {
+      case Projection(_, _, 0) =>
         Stream.empty
 
-      case Interval(left, right, direction) =>
+      case Projection(left, right, direction) =>
         val criteria = Seq(
           left.map(b => (if (b.isClosed) Filters.gte _ else Filters.gt _)("_id", b.value)),
           right.map(b => (if (b.isClosed) Filters.lte _ else Filters.lt _)("_id", b.value))
