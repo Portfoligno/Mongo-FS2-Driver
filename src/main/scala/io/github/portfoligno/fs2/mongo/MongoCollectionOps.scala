@@ -2,13 +2,12 @@ package io.github.portfoligno.fs2.mongo
 
 import cats.data.OptionT
 import cats.effect.{Async, ConcurrentEffect}
-import com.mongodb.bulk.BulkWriteResult
-import com.mongodb.client.model.{Filters, InsertOneModel, Projections, Sorts}
+import com.mongodb.client.model.{Filters, InsertOneModel, Sorts}
 import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection}
-import fs2.Stream
 import fs2.interop.reactivestreams._
+import fs2.{Chunk, Stream}
 import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
-import io.github.portfoligno.fs2.mongo.algebra.segment.{Interval, Segment, SegmentT}
+import io.github.portfoligno.fs2.mongo.algebra.segment.{Interval, Segment}
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
@@ -36,20 +35,11 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
   def lastId(implicit F: Async[F]): OptionT[F, ObjectId] =
     boundId(Sorts.descending(_))
 
-  def idInterval(implicit F: Async[F]): SegmentT[F, BsonOrder, ObjectId] =
-    SegmentT((firstId, lastId)
-      .mapN(Segment.closed[BsonOrder](_, _))
-      .fold(Segment.empty[BsonOrder, ObjectId])(identity))
 
-
-  def findById(
-    segment: SegmentT[F, BsonOrder, ObjectId]
-  )(
-    fields: Seq[String], batchSize: Int
-  )(
+  def findById(segment: Segment[BsonOrder, ObjectId])(batchSize: Int)(
     implicit F: ConcurrentEffect[F], A: BsonOrder[ObjectId]
   ): Stream[F, Document] =
-    Stream.eval(segment.value) >>= {
+    segment match {
       case Interval(_, _, 0) =>
         Stream.empty
 
@@ -60,7 +50,6 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
         )
         underlying
           .find(Filters.and(criteria.flatten: _*))
-          .projection(Projections.include(fields: _*))
           .sort((if (direction < 0) Sorts.descending(_: String) else Sorts.ascending(_: String))("_id"))
           .batchSize(batchSize)
           .toStream
@@ -69,9 +58,8 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
     }
 
 
-  def insert(documents: Stream[F, Document])(implicit F: ConcurrentEffect[F]): Stream[F, BulkWriteResult] =
-    documents
-      .map(new InsertOneModel(_))
-      .chunks
-      .flatMap(c => underlying.bulkWrite(c.toVector.asJava).toStream[F])
+  def insert(chunk: Chunk[Document])(implicit F: ConcurrentEffect[F]): Stream[F, Any] =
+    underlying
+      .bulkWrite(chunk.map(new InsertOneModel(_)).toVector.asJava)
+      .toStream[F]
 }
