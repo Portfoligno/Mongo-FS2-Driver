@@ -6,9 +6,7 @@ import io.github.portfoligno.fs2.mongo.settings.{MongoCredential, MongoSettings,
 
 import scala.collection.immutable.Seq
 
-class MongoDatabase[F[_]](override val underlying: ReactiveDatabase)
-  extends AnyVal with Wrapped[ReactiveDatabase] {
-
+class MongoDatabase[F[_]](override val underlying: ReactiveDatabase) extends Wrapped[ReactiveDatabase] {
   def apply(collectionName: String): MongoCollection[F] =
     new MongoCollection(underlying.getCollection(collectionName))
 

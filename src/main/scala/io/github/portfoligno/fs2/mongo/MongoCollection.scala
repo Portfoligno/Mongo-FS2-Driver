@@ -5,8 +5,7 @@ import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection
 import io.github.portfoligno.fs2.mongo.settings.MongoUri
 import org.bson.Document
 
-class MongoCollection[F[_]](override val underlying: ReactiveCollection[Document])
-  extends AnyVal with MongoCollectionOps[F]
+class MongoCollection[F[_]](override val underlying: ReactiveCollection[Document]) extends MongoCollectionOps[F]
 
 object MongoCollection {
   def apply[F[_] : Sync](uri: String): Resource[F, MongoCollection[F]] =
