@@ -16,7 +16,7 @@ trait IntervalInstances {
         Product(start, end).proper
 
       case -1 =>
-        Product(start, end).dual.proper
+        Product(end, start).proper.dual
 
       case _ =>
         Product(start, end)
