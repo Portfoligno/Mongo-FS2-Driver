@@ -9,7 +9,7 @@ package object interval {
     def dual: Interval[O, A] = Dual(this)
   }
 
-  case object Zero extends Interval[Pure, Nothing] {
+  case object Empty extends Interval[Pure, Nothing] {
     override
     def proper: Interval[Pure, Nothing] = this
 

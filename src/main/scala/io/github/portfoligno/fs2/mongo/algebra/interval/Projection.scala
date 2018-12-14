@@ -43,7 +43,7 @@ object Projection {
       case Product(left, right) =>
         Some((left, right, 1)) // (Half) Unbounded Interval
 
-      case Zero =>
+      case Empty =>
         Some((None, None, 0)) // Empty interval
     }
 }

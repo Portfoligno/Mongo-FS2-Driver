@@ -4,13 +4,13 @@ import scala.math.signum
 
 private[interval]
 trait IntervalInstances {
-  def zero[O[_], A]: Interval[O, A] =
-    Zero.asInstanceOf[Interval[O, A]]
+  def empty[O[_], A]: Interval[O, A] =
+    Empty.asInstanceOf[Interval[O, A]]
 
   def apply[O[_], A](start: Option[Bound[A]], end: Option[Bound[A]], direction: Double): Interval[O, A] =
     signum(direction) match {
       case 0 =>
-        zero
+        empty
 
       case 1 =>
         Product(start, end).proper
