@@ -16,6 +16,7 @@ import org.bson.types.{ObjectId => UnderlyingObjectId}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
+import scala.math.signum
 
 private[mongo]
 trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Document]] {
@@ -52,7 +53,16 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
         )
         underlying
           .find(Filters.and(criteria.flatten: _*))
-          .sort((if (direction < 0) Sorts.descending(_: String) else Sorts.ascending(_: String))("_id"))
+          .sort(signum(direction) match {
+            case 1 =>
+              Sorts.ascending("_id")
+
+            case -1 =>
+              Sorts.descending("_id")
+
+            case _ =>
+              null // No sorting
+          })
           .batchSize(batchSize)
           .toStream
           .chunkN(batchSize)
