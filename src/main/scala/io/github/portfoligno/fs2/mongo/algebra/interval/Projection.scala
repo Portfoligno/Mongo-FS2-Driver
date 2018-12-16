@@ -11,10 +11,11 @@ object Projection {
   private
   type OB[A] = Option[Bound[A]]
 
-  def unapply[O[_], A](segment: Interval[O, A])(
+
+  def unapply[O[_], A](interval: Interval[O, A])(
     implicit A: O[A], ev: O ~> Order
   ): Option[(Option[Bound[A]], Option[Bound[A]], Int)] =
-    segment match {
+    interval match {
       case Dual(Projection(left: OB[A], right: OB[A], direction)) =>
         Some((left, right, -direction))
 

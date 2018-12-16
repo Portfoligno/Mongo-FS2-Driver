@@ -5,7 +5,6 @@ import cats.syntax.either._
 import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
 import io.github.portfoligno.fs2.mongo.algebra.BsonOrder._
 import org.bson.types.Decimal128
-import spire.math.NumberTag
 import spire.math.NumberTag.BuiltinFloatTag
 
 import scala.Function.const
@@ -23,7 +22,7 @@ trait Decimal128BsonOrderInstances {
   implicit def bigDecimalOrder: Order[java.math.BigDecimal] = Order.fromComparable
 
   private
-  implicit lazy val decimal128NumberTag: NumberTag[Decimal128] = new BuiltinFloatTag[Decimal128](
+  implicit object Decimal128NumberTag extends BuiltinFloatTag[Decimal128](
     Decimal128.POSITIVE_ZERO,
     Decimal128.fromIEEE754BIDEncoding(0x5fffed09bead87c0L, 0x378d8e63ffffffffL),
     Decimal128.fromIEEE754BIDEncoding(0xdfffed09bead87c0L, 0x378d8e63ffffffffL),

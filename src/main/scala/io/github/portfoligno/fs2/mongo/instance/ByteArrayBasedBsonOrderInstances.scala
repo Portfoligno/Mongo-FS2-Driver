@@ -23,7 +23,7 @@ trait ByteArrayBasedBsonOrderInstances {
         val result = UByte(left(i)) compare UByte(right(i))
 
         if (result != 0) {
-          result.toInt
+          result
         } else {
           loop(1 + i)
         }

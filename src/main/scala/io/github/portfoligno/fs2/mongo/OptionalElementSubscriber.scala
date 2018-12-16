@@ -12,8 +12,8 @@ class OptionalElementSubscriber[A](callback: Either[Throwable, Option[A]] => Uni
     s.request(1)
 
   override
-  def onNext(t: A): Unit = received =
-    Some(t)
+  def onNext(t: A): Unit =
+    received = Some(t)
 
   override
   def onError(t: Throwable): Unit =
