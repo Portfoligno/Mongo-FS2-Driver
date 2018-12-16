@@ -29,6 +29,15 @@ package object interval {
 
   final case class Dual[O[_], A](value: Interval[O, A]) extends AnyVal with Interval[O, A] {
     override
+    def proper: Interval[O, A] = value match {
+      case _: Proper[O, A] =>
+        Interval.empty // x.proper.dual.proper is empty for all x
+
+      case _ =>
+        Proper(this)
+    }
+
+    override
     def dual: Interval[O, A] = value
   }
 
