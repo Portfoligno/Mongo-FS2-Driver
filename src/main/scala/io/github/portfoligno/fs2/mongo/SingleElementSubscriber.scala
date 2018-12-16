@@ -13,7 +13,9 @@ class SingleElementSubscriber[A](callback: Either[Throwable, A] => Unit) extends
 
   override
   def onNext(t: A): Unit =
-    received = Some(t)
+    received = received.fold(Some(t))(
+      throw new IllegalStateException("At most one element is expected")
+    )
 
   override
   def onError(t: Throwable): Unit =
@@ -22,5 +24,6 @@ class SingleElementSubscriber[A](callback: Either[Throwable, A] => Unit) extends
   override
   def onComplete(): Unit =
     callback(received.toRight(
-      new NoSuchElementException("An element is expected")))
+      new NoSuchElementException("At least one element is expected")
+    ))
 }

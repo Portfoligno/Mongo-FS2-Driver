@@ -13,7 +13,9 @@ class OptionalElementSubscriber[A](callback: Either[Throwable, Option[A]] => Uni
 
   override
   def onNext(t: A): Unit =
-    received = Some(t)
+    received = received.fold(Some(t))(
+      throw new IllegalStateException("At most one element is expected")
+    )
 
   override
   def onError(t: Throwable): Unit =
