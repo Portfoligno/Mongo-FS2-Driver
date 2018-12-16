@@ -4,6 +4,8 @@ import cats.data.OptionT
 import cats.effect.{Async, ConcurrentEffect}
 import cats.instances.all._
 import cats.syntax.compose._
+import cats.syntax.functor._
+import com.mongodb.bulk.BulkWriteResult
 import com.mongodb.client.model.{Filters, InsertOneModel, Projections, Sorts}
 import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection}
 import fs2.interop.reactivestreams._
@@ -81,16 +83,19 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Under
     }
 
 
-  def insert(chunk: Chunk[Document])(implicit F: ConcurrentEffect[F]): Stream[F, WriteResult] =
+  def insert(chunk: Chunk[Document])(implicit F: ConcurrentEffect[F]): OptionT[F, WriteResult] =
     if (chunk.isEmpty) {
-      Stream.empty
+      OptionT.none
     } else {
-      underlying
-        .bulkWrite(chunk
-          .map((new InsertOneModel(_: UnderlyingDocument)) <<< (_.underlying))
-          .toVector
-          .asJava)
-        .toStream
-        .map(WriteResult)
+      OptionT.liftF(F
+        .async[BulkWriteResult](callback =>
+          underlying
+            .bulkWrite(chunk
+              .map((new InsertOneModel(_: UnderlyingDocument)) <<< (_.underlying))
+              .toVector
+              .asJava)
+            .subscribe(new SingleElementSubscriber(callback))
+        )
+        .map(WriteResult))
     }
 }
