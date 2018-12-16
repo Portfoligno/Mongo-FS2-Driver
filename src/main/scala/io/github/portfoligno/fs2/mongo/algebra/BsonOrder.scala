@@ -11,7 +11,12 @@ object BsonOrder extends BsonOrderInstances {
   case class FromOrder[A](override val toOrder: Order[A]) extends AnyVal with BsonOrder[A]
 
 
-  def fromOrder[A](implicit order: Order[A]): BsonOrder[A] = FromOrder(order)
+  def fromOrder[A](implicit order: Order[A]): BsonOrder[A] =
+    FromOrder(order)
 
-  def fromComparable[A <: Comparable[A]]: BsonOrder[A] = FromOrder(Order.fromComparable)
+  def fromComparable[A <: Comparable[A]]: BsonOrder[A] =
+    FromOrder(Order.fromComparable)
+
+  def by[A, B](f: A => B)(implicit ev: BsonOrder[B]): BsonOrder[A] =
+    FromOrder(Order.by(f)(ev.toOrder))
 }

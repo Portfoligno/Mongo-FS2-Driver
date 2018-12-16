@@ -7,11 +7,12 @@ import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection
 import fs2.interop.reactivestreams._
 import fs2.{Chunk, Stream}
 import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
-import io.github.portfoligno.fs2.mongo.algebra.interval.{Projection, Interval}
+import io.github.portfoligno.fs2.mongo.algebra.interval.{Interval, Projection}
+import io.github.portfoligno.fs2.mongo.bson.ObjectId
 import io.github.portfoligno.fs2.mongo.result.WriteResult
 import org.bson.Document
 import org.bson.conversions.Bson
-import org.bson.types.ObjectId
+import org.bson.types.{ObjectId => UnderlyingObjectId}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
@@ -28,7 +29,7 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
           .first()
           .subscribe(new OptionalElementSubscriber(callback))
       ))
-      .map(_.get("_id", classOf[ObjectId]))
+      .map(document => ObjectId(document.get("_id").asInstanceOf[UnderlyingObjectId]))
 
   def firstId(implicit F: Async[F]): OptionT[F, ObjectId] =
     boundId(Sorts.ascending(_))
@@ -46,8 +47,8 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
 
       case Projection(left, right, direction) =>
         val criteria = Seq(
-          left.map(b => (if (b.isClosed) Filters.gte _ else Filters.gt _)("_id", b.value)),
-          right.map(b => (if (b.isClosed) Filters.lte _ else Filters.lt _)("_id", b.value))
+          left.map(b => (if (b.isClosed) Filters.gte _ else Filters.gt _)("_id", b.value.underlying)),
+          right.map(b => (if (b.isClosed) Filters.lte _ else Filters.lt _)("_id", b.value.underlying))
         )
         underlying
           .find(Filters.and(criteria.flatten: _*))
