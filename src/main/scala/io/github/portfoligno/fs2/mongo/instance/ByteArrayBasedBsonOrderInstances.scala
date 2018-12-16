@@ -1,16 +1,18 @@
-package io.github.portfoligno.fs2.mongo.algebra
+package io.github.portfoligno.fs2.mongo.instance
 
 import cats.Order
 import cats.instances.all._
 import cats.syntax.order._
+import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
+import io.github.portfoligno.fs2.mongo.algebra.BsonOrder._
 import org.bson.BsonBinarySubType
 import org.bson.types.{Binary, ObjectId}
 import spire.math.UByte
 
 import scala.annotation.tailrec
 
-private[algebra]
-trait ByteArrayBasedBsonOrderInstances extends BsonOrderInstances {
+private[instance]
+trait ByteArrayBasedBsonOrderInstances {
   private
   implicit lazy val sameLengthByteArrayOrder: Order[Array[Byte]] = Order.from { (left, right) =>
     val n = left.length // The same as right.length

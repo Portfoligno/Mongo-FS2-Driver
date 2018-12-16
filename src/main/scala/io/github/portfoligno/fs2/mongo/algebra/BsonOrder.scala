@@ -1,15 +1,17 @@
 package io.github.portfoligno.fs2.mongo.algebra
 
-import cats.arrow.FunctionK
-import cats.{Order, ~>}
+import cats.Order
 
 trait BsonOrder[A] extends Any {
   def toOrder: Order[A]
 }
 
-object BsonOrder extends ByteArrayBasedBsonOrderInstances with NumericBsonOrderInstances {
-  implicit lazy val bsonOrderFunctionKInstance: BsonOrder ~> Order = new FunctionK[BsonOrder, Order] {
-    override
-    def apply[A](fa: BsonOrder[A]): Order[A] = fa.toOrder
-  }
+object BsonOrder extends BsonOrderInstances {
+  private[algebra]
+  case class FromOrder[A](override val toOrder: Order[A]) extends AnyVal with BsonOrder[A]
+
+
+  def fromOrder[A](implicit order: Order[A]): BsonOrder[A] = FromOrder(order)
+
+  def fromComparable[A <: Comparable[A]]: BsonOrder[A] = FromOrder(Order.fromComparable)
 }

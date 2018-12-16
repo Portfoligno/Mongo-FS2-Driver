@@ -1,15 +1,17 @@
-package io.github.portfoligno.fs2.mongo.algebra
+package io.github.portfoligno.fs2.mongo.instance
 
 import cats.Order
 import cats.syntax.either._
+import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
+import io.github.portfoligno.fs2.mongo.algebra.BsonOrder._
 import org.bson.types.Decimal128
 import spire.math.NumberTag
 import spire.math.NumberTag.BuiltinFloatTag
-import spire.std.any._
 
 import scala.Function.const
 
-trait NumericBsonOrderInstances extends BsonOrderInstances {
+private[instance]
+trait Decimal128BsonOrderInstances {
   private
   val NAN = 0x7c00000000000000L
   private
@@ -39,29 +41,6 @@ trait NumericBsonOrderInstances extends BsonOrderInstances {
   private
   def isNegativeInfinity(a: Decimal128): Boolean = (a.getHigh & NEGATIVE_INFINITE) == NEGATIVE_INFINITE
 
-
-  /**
-    * NaN < -Infinity < Finite numbers < +Infinity
-    *
-    * @see https://docs.mongodb.com/manual/reference/bson-type-comparison-order/#numeric-types
-    */
-  implicit lazy val doubleBsonOrder: BsonOrder[Double] = fromOrder(
-    Order.by[Double, Option[Double]](
-      _.nonNaN
-    )(
-      noneFirst[Double]
-    )
-  )
-
-  /**
-    * @see https://docs.mongodb.com/manual/reference/bson-type-comparison-order/#numeric-types
-    */
-  implicit lazy val intBsonOrder: BsonOrder[Int] = fromOrder
-
-  /**
-    * @see https://docs.mongodb.com/manual/reference/bson-type-comparison-order/#numeric-types
-    */
-  implicit lazy val longBsonOrder: BsonOrder[Long] = fromOrder
 
   /**
     * NaN < -Infinity < Finite numbers < +Infinity
