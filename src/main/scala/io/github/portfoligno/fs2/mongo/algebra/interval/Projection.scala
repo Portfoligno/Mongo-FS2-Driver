@@ -9,17 +9,17 @@ import scala.math.signum
   */
 object Projection {
   private
-  type OB[A] = Option[Bound[A]]
+  type OB[O[_], A] = Option[Bound[O, A]]
 
 
   def unapply[O[_], A](interval: Interval[O, A])(
     implicit A: O[A], ev: O ~> Order
-  ): Option[(Option[Bound[A]], Option[Bound[A]], Int)] =
+  ): Option[(Option[Bound[O, A]], Option[Bound[O, A]], Int)] =
     interval match {
-      case Dual(Projection(left: OB[A], right: OB[A], direction)) =>
+      case Dual(Projection(left: OB[O, A], right: OB[O, A], direction)) =>
         Some((left, right, -direction))
 
-      case Proper(Projection(left: OB[A], right: OB[A], direction)) =>
+      case Proper(Projection(left: OB[O, A], right: OB[O, A], direction)) =>
         if (direction > 0) {
           Some((left, right, direction))
         } else {

@@ -19,7 +19,7 @@ package object interval {
     def dual: Interval[Pure, Nothing] = this
   }
 
-  final case class Product[O[_], A](start: Option[Bound[A]], end: Option[Bound[A]]) extends Interval[O, A]
+  final case class Product[O[_], A](start: Option[Bound[O, A]], end: Option[Bound[O, A]]) extends Interval[O, A]
 
 
   final case class Proper[O[_], A](value: Interval[O, A]) extends AnyVal with Interval[O, A] {
@@ -45,7 +45,7 @@ package object interval {
   object Interval extends IntervalInstances {
     private[interval]
     class PartiallyApplied[O[_]](private val dummy: Boolean = true) extends AnyVal {
-      def apply[A](start: Option[Bound[A]], end: Option[Bound[A]], direction: Double): Interval[O, A] =
+      def apply[A](start: Option[Bound[O, A]], end: Option[Bound[O, A]], direction: Double): Interval[O, A] =
         signum(direction) match {
           case 0 =>
             empty
