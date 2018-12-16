@@ -9,6 +9,6 @@ case class ObjectId(override val underlying: UnderlyingObjectId) extends Wrapped
 object ObjectId extends (UnderlyingObjectId => ObjectId) {
   import io.github.portfoligno.fs2.mongo.instance.bsonUnderlying._
 
-  lazy val bsonOrderInstance: BsonOrder[ObjectId] =
+  implicit lazy val bsonOrderInstance: BsonOrder[ObjectId] =
     BsonOrder.by(_.underlying)
 }
