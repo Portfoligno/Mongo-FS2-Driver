@@ -83,7 +83,7 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Under
     }
 
 
-  def insert(chunk: Chunk[Document])(implicit F: ConcurrentEffect[F]): OptionT[F, WriteResult] =
+  def insert(chunk: Chunk[Document])(implicit F: Async[F]): OptionT[F, WriteResult] =
     if (chunk.isEmpty) {
       OptionT.none
     } else {
