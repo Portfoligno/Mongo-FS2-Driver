@@ -82,11 +82,15 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Under
 
 
   def insert(chunk: Chunk[Document])(implicit F: ConcurrentEffect[F]): Stream[F, WriteResult] =
-    underlying
-      .bulkWrite(chunk
-        .map((new InsertOneModel(_: UnderlyingDocument)) <<< (_.underlying))
-        .toVector
-        .asJava)
-      .toStream
-      .map(WriteResult)
+    if (chunk.isEmpty) {
+      Stream.empty
+    } else {
+      underlying
+        .bulkWrite(chunk
+          .map((new InsertOneModel(_: UnderlyingDocument)) <<< (_.underlying))
+          .toVector
+          .asJava)
+        .toStream
+        .map(WriteResult)
+    }
 }
