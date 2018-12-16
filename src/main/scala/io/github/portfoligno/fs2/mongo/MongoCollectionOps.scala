@@ -55,7 +55,14 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Under
           right.map(b => (if (b.isClosed) Filters.lte _ else Filters.lt _)("_id", b.value.underlying))
         )
         underlying
-          .find(Filters.and(criteria.flatten: _*))
+          .find(criteria.flatten match {
+            // Special handling since `Filters.and()` is translated to `{$and: []}`, which is an error
+            case Seq() =>
+              null
+
+            case seq =>
+              Filters.and(seq: _*)
+          })
           .sort(signum(direction) match {
             case 1 =>
               Sorts.ascending("_id")
