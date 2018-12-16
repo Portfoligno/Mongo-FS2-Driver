@@ -4,7 +4,7 @@ import cats.data.OptionT
 import cats.effect.{Async, ConcurrentEffect}
 import cats.instances.all._
 import cats.syntax.compose._
-import com.mongodb.client.model.{Filters, InsertOneModel, Sorts}
+import com.mongodb.client.model.{Filters, InsertOneModel, Projections, Sorts}
 import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection}
 import fs2.interop.reactivestreams._
 import fs2.{Chunk, Stream}
@@ -28,6 +28,7 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Under
       .apply[F, UnderlyingDocument](F.async(callback =>
         underlying
           .find()
+          .projection(Projections.include("_id"))
           .sort(sort("_id"))
           .first()
           .subscribe(new OptionalElementSubscriber(callback))
