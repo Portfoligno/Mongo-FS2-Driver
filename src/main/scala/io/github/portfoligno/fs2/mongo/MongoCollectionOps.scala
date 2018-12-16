@@ -2,35 +2,37 @@ package io.github.portfoligno.fs2.mongo
 
 import cats.data.OptionT
 import cats.effect.{Async, ConcurrentEffect}
+import cats.instances.all._
+import cats.syntax.compose._
 import com.mongodb.client.model.{Filters, InsertOneModel, Sorts}
 import com.mongodb.reactivestreams.client.{MongoCollection => ReactiveCollection}
 import fs2.interop.reactivestreams._
 import fs2.{Chunk, Stream}
 import io.github.portfoligno.fs2.mongo.algebra.BsonOrder
 import io.github.portfoligno.fs2.mongo.algebra.interval.{Interval, Projection}
-import io.github.portfoligno.fs2.mongo.bson.ObjectId
+import io.github.portfoligno.fs2.mongo.bson.{Document, ObjectId}
 import io.github.portfoligno.fs2.mongo.result.WriteResult
-import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.{ObjectId => UnderlyingObjectId}
+import org.bson.{Document => UnderlyingDocument}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
 import scala.math.signum
 
 private[mongo]
-trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Document]] {
+trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[UnderlyingDocument]] {
   private
-  def boundId(sorting: String => Bson)(implicit F: Async[F]): OptionT[F, ObjectId] =
+  def boundId(sort: String => Bson)(implicit F: Async[F]): OptionT[F, ObjectId] =
     OptionT
-      .apply[F, Document](F.async(callback =>
+      .apply[F, UnderlyingDocument](F.async(callback =>
         underlying
           .find()
-          .sort(sorting("_id"))
+          .sort(sort("_id"))
           .first()
           .subscribe(new OptionalElementSubscriber(callback))
       ))
-      .map(document => ObjectId(document.get("_id").asInstanceOf[UnderlyingObjectId]))
+      .map(ObjectId <<< (_.get("_id", classOf[UnderlyingObjectId])))
 
   def firstId(implicit F: Async[F]): OptionT[F, ObjectId] =
     boundId(Sorts.ascending(_))
@@ -61,10 +63,11 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
               Sorts.descending("_id")
 
             case _ =>
-              null // No sorting
+              null // No sorts
           })
           .batchSize(batchSize)
           .toStream
+          .map(Document)
           .chunkN(batchSize)
           .flatMap(Stream.chunk)
     }
@@ -72,7 +75,10 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Docum
 
   def insert(chunk: Chunk[Document])(implicit F: ConcurrentEffect[F]): Stream[F, WriteResult] =
     underlying
-      .bulkWrite(chunk.map(new InsertOneModel(_)).toVector.asJava)
+      .bulkWrite(chunk
+        .map((new InsertOneModel(_: UnderlyingDocument)) <<< (_.underlying))
+        .toVector
+        .asJava)
       .toStream
       .map(WriteResult)
 }

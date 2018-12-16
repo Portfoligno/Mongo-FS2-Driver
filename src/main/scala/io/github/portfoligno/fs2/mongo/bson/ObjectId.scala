@@ -6,7 +6,7 @@ import org.bson.types.{ObjectId => UnderlyingObjectId}
 
 case class ObjectId(override val underlying: UnderlyingObjectId) extends Wrapped[UnderlyingObjectId]
 
-object ObjectId {
+object ObjectId extends (UnderlyingObjectId => ObjectId) {
   import io.github.portfoligno.fs2.mongo.instance.bsonCore._
 
   lazy val bsonOrderInstance: BsonOrder[ObjectId] =
