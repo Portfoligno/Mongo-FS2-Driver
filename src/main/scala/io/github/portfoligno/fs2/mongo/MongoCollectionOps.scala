@@ -35,7 +35,7 @@ trait MongoCollectionOps[F[_]] extends Any with Wrapped[ReactiveCollection[Under
           .first()
           .subscribe(new OptionalElementSubscriber(callback))
       ))
-      .map(ObjectId <<< (_.get("_id", classOf[UnderlyingObjectId])))
+      .map(ObjectId.apply _ <<< (_.get("_id", classOf[UnderlyingObjectId])))
 
   def firstId(implicit F: Async[F]): OptionT[F, ObjectId] =
     boundId(Sorts.ascending(_))
