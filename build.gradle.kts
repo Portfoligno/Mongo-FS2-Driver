@@ -26,6 +26,7 @@ dependencies {
   api("co.fs2:fs2-core_2.12:1.0.2")
 
   implementation("org.mongodb:mongodb-driver-reactivestreams:1.10.0")
+  api("org.mongodb:bson:3.9.0")
 }
 
 tasks.withType<ScalaCompile> {
